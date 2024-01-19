@@ -8,15 +8,16 @@ func main() {
 	var line chan string = make(chan string)
 	var quit chan int = make(chan int)
 	var input string
-	//defer close(line)
-	//defer close(quit)
+	defer close(quit)
+
 	go func() {
 		for {
-			fmt.Scan(&input)
+			fmt.Scanf("%s", &input)
 			if input == "exit" {
-				quit <- 0
+				close(line)
+				return
 			}
-			go calc(&line, quit, input)
+			go calc(line, quit, input)
 		}
 	}()
 	for str := range line {
@@ -24,14 +25,11 @@ func main() {
 	}
 }
 
-func calc(text *chan string, quit chan int, s string) {
+func calc(line chan string, quit chan int, s string) {
 	select {
-	case *text <- s:
-		*text <- "Echo " + <-*text
+	case line <- s:
+		line <- "Echo " + s
 	case <-quit:
-		fmt.Println("Quit")
-		close(*text)
-		close(quit)
 		return
 	}
 }
