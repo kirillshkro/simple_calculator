@@ -57,32 +57,27 @@ func parse(str string) (Token, error) {
 }
 
 func Calculate(str string, result chan int) {
-	var res chan int = make(chan int)
 	if str == "quit" || str == "exit" {
 		close(result)
-		close(res)
 		return
 	}
 	go func(s string, out chan int) {
 		line, _ := parse(s)
-		res := 0
 		op1, err1 := strconv.Atoi(line.operand)
 		op2, err2 := strconv.Atoi(line.operand2)
 		switch line.opKind {
 		case plus:
 			if err1 == nil && err2 == nil {
-				res = op1 + op2
+				out <- op1 + op2
 			}
 		case minus:
 			if err1 == nil && err2 == nil {
-				res = op1 - op2
+				out <- op1 - op2
 			}
 		case mul:
-			res = op1 * op2
+			out <- op1 * op2
 		case div:
-			res = op1 / op2
+			out <- op1 / op2
 		}
-		out <- res
-	}(str, res)
-	result = res
+	}(str, result)
 }

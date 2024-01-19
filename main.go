@@ -11,10 +11,6 @@ func main() {
 	go func() {
 		for {
 			fmt.Scanf("%s", &input)
-			if input == "exit" {
-				close(result)
-				return
-			}
 			go Calculate(input, result)
 		}
 	}()
