@@ -56,43 +56,33 @@ func parse(str string) (Token, error) {
 	return token, nil
 }
 
-func Calculate(str string, result int) {
-	res := make(chan int)
-	quit := make(chan string)
-	s := make(chan string)
-	s <- str
-	x := ""
-	for {
-		select {
-		case quit <- x:
-			if x == "quit" || x == "exit" {
-				close(res)
-				close(quit)
-				close(s)
-				return
-			}
-		case s <- x:
-			go func(s, quit chan string) {
-
-				line, _ := parse(<-s)
-				op1, err1 := strconv.Atoi(line.operand)
-				op2, err2 := strconv.Atoi(line.operand2)
-				switch line.opKind {
-				case plus:
-					if err1 == nil && err2 == nil {
-						res <- op1 + op2
-					}
-				case minus:
-					if err1 == nil && err2 == nil {
-						res <- op1 - op2
-					}
-				case mul:
-					res <- op1 * op2
-				case div:
-					res <- op1 / op2
-				}
-			}(s, quit)
-			res <- result
-		}
+func Calculate(str string, result chan int) {
+	var res chan int = make(chan int)
+	if str == "quit" || str == "exit" {
+		close(result)
+		close(res)
+		return
 	}
+	go func(s string, out chan int) {
+		line, _ := parse(s)
+		res := 0
+		op1, err1 := strconv.Atoi(line.operand)
+		op2, err2 := strconv.Atoi(line.operand2)
+		switch line.opKind {
+		case plus:
+			if err1 == nil && err2 == nil {
+				res = op1 + op2
+			}
+		case minus:
+			if err1 == nil && err2 == nil {
+				res = op1 - op2
+			}
+		case mul:
+			res = op1 * op2
+		case div:
+			res = op1 / op2
+		}
+		out <- res
+	}(str, res)
+	result = res
 }

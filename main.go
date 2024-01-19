@@ -5,31 +5,20 @@ import (
 )
 
 func main() {
-	var line chan string = make(chan string)
-	var quit chan int = make(chan int)
+	var result chan int = make(chan int)
 	var input string
-	defer close(quit)
 
 	go func() {
 		for {
 			fmt.Scanf("%s", &input)
 			if input == "exit" {
-				close(line)
+				close(result)
 				return
 			}
-			go calc(line, quit, input)
+			go Calculate(input, result)
 		}
 	}()
-	for str := range line {
-		fmt.Println(str)
-	}
-}
-
-func calc(line chan string, quit chan int, s string) {
-	select {
-	case line <- s:
-		line <- "Echo " + s
-	case <-quit:
-		return
+	for res := range result {
+		fmt.Printf("Result %s is %d\n", input, res)
 	}
 }
