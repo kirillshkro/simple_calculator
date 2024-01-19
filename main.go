@@ -10,26 +10,28 @@ func main() {
 	var input string
 	//defer close(line)
 	//defer close(quit)
-	fmt.Scan(&input)
 	go func() {
 		for {
+			fmt.Scan(&input)
 			if input == "exit" {
 				quit <- 0
 			}
-			calc(line, quit, input)
+			go calc(&line, quit, input)
 		}
 	}()
-	fmt.Println(<-line)
+	for str := range line {
+		fmt.Println(str)
+	}
 }
 
-func calc(text chan string, quit chan int, s string) {
-	for {
-		select {
-		case text <- s:
-			str := "Echo " + <-text
-			fmt.Println(str)
-		case <-quit:
-			fmt.Println("Quit")
-		}
+func calc(text *chan string, quit chan int, s string) {
+	select {
+	case *text <- s:
+		*text <- "Echo " + <-*text
+	case <-quit:
+		fmt.Println("Quit")
+		close(*text)
+		close(quit)
+		return
 	}
 }
