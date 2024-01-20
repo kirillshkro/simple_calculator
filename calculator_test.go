@@ -37,10 +37,17 @@ func Test_Calculate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go Calculate(tt.line, tt.result)
-			if tt.expected != tt.result {
-				t.Errorf("In %s %d != %d\n", tt.name, tt.expected, tt.result)
-			}
+			go func() {
+				result := make(chan int)
+				defer close(result)
+				go Calculate(tt.line, result)
+				for res := range result {
+					tt.result = res
+					if tt.expected != tt.result {
+						t.Errorf("In %s %d != %d\n", tt.name, tt.expected, tt.result)
+					}
+				}
+			}()
 		})
 	}
 }
