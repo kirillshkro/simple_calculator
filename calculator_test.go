@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/smartystreets/goconvey/convey"
+)
 
 func Test_Calculate(t *testing.T) {
 	tests := []struct {
@@ -38,40 +42,42 @@ func Test_Calculate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			go func() {
-				result := make(chan int)
-				defer close(result)
-				go Calculate(tt.line, result)
-				for res := range result {
-					tt.result = res
-					if tt.expected != tt.result {
-						t.Errorf("In %s %d != %d\n", tt.name, tt.expected, tt.result)
+				convey.Convey(tt.name, t, func() {
+					result := make(chan int)
+					defer close(result)
+					go Calculate(tt.line, result)
+					for res := range result {
+						convey.So(tt.expected, convey.ShouldEqual, res)
 					}
-				}
+				})
+
 			}()
 		})
 	}
 }
 
 func Test_trim(t *testing.T) {
-	mockData := "I'm where, i'm there, i'm everyhere"
-	expected := "I'mwhere,i'mthere,i'meveryhere"
+	convey.Convey("Test_trim", t, func() {
+		mockData := "I'm where, i'm there, i'm everyhere"
+		expected := "I'mwhere,i'mthere,i'meveryhere"
 
-	result := trim(mockData)
-	if result != expected {
-		t.Errorf("%s not compare with %s\n", result, expected)
-	}
+		result := trim(mockData)
+		convey.So(expected, convey.ShouldEqual, result)
+	})
+
 }
 
 func Test_parse(t *testing.T) {
-	mockData := " 2 * 2"
-	expectedToken := Token{
-		operand:  "2",
-		operand2: "2",
-		opKind:   '*',
-	}
-	result, _ := parse(mockData)
-
-	if result.opKind != expectedToken.opKind || result.operand != expectedToken.operand || result.operand2 != expectedToken.operand2 {
-		t.Error("Test fallen")
-	}
+	convey.Convey("Test parse", t, func() {
+		mockData := " 2 * 2"
+		expectedToken := Token{
+			operand:  "2",
+			operand2: "2",
+			opKind:   '*',
+		}
+		result, _ := parse(mockData)
+		convey.So(expectedToken.opKind, convey.ShouldEqual, result.opKind)
+		convey.So(expectedToken.operand, convey.ShouldEqual, result.operand)
+		convey.So(expectedToken.operand2, convey.ShouldEqual, result.operand2)
+	})
 }
